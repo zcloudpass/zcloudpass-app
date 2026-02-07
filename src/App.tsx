@@ -10,16 +10,38 @@ import Login from "./components/Login";
 import Register from "./components/Register";
 import Vault from "./components/Vault";
 import Settings from "./components/Settings";
+import Landing from "./components/Landing";
 import { api } from "./lib/api";
-import "./App.css";
 
 function AppContent() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [theme, setTheme] = useState<"light" | "dark">(() => {
+    if (typeof window !== "undefined") {
+      const saved = localStorage.getItem("theme");
+      if (saved === "light" || saved === "dark") return saved;
+      return window.matchMedia("(prefers-color-scheme: dark)").matches
+        ? "dark"
+        : "light";
+    }
+    return "dark";
+  });
+
   const navigate = useNavigate();
 
   useEffect(() => {
     setIsAuthenticated(api.isAuthenticated());
   }, []);
+
+  useEffect(() => {
+    const root = window.document.documentElement;
+    root.classList.remove("light", "dark");
+    root.classList.add(theme);
+    localStorage.setItem("theme", theme);
+  }, [theme]);
+
+  const toggleTheme = () => {
+    setTheme((prev) => (prev === "light" ? "dark" : "light"));
+  };
 
   const handleLoginSuccess = () => {
     setIsAuthenticated(true);
@@ -29,11 +51,11 @@ function AppContent() {
   const handleLogout = () => {
     api.logout();
     setIsAuthenticated(false);
-    navigate("/login");
+    navigate("/");
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900">
+    <div className="min-h-screen bg-background text-foreground transition-colors duration-300">
       <Routes>
         <Route
           path="/login"
@@ -59,7 +81,11 @@ function AppContent() {
           path="/vault"
           element={
             isAuthenticated ? (
-              <Vault onLogout={handleLogout} />
+              <Vault
+                onLogout={handleLogout}
+                theme={theme}
+                toggleTheme={toggleTheme}
+              />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -69,7 +95,11 @@ function AppContent() {
           path="/settings"
           element={
             isAuthenticated ? (
-              <Settings onLogout={handleLogout} />
+              <Settings
+                onLogout={handleLogout}
+                theme={theme}
+                toggleTheme={toggleTheme}
+              />
             ) : (
               <Navigate to="/login" replace />
             )
@@ -78,7 +108,11 @@ function AppContent() {
         <Route
           path="/"
           element={
-            <Navigate to={isAuthenticated ? "/vault" : "/login"} replace />
+            isAuthenticated ? (
+              <Navigate to="/vault" replace />
+            ) : (
+              <Landing theme={theme} toggleTheme={toggleTheme} />
+            )
           }
         />
       </Routes>

@@ -46,48 +46,52 @@ export default function Login({ onLoginSuccess }: LoginProps) {
 
   return (
     <div className="flex items-center justify-center min-h-screen p-4">
-      <Card className="w-full max-w-md animate-slide-in">
-        <CardHeader className="space-y-2">
-          <div className="flex items-center justify-center mb-4">
-            <div className="p-3 bg-primary/10 rounded-full">
+      <Card className="w-full max-w-md border shadow-sm">
+        <CardHeader className="space-y-1 pb-4">
+          <div className="flex items-center justify-center mb-2">
+            <div className="p-3 bg-primary/10 rounded-2xl">
               <Lock className="w-8 h-8 text-primary" />
             </div>
           </div>
-          <CardTitle className="text-2xl text-center">Welcome Back</CardTitle>
-          <CardDescription className="text-center">
-            Sign in to access your password vault
+          <CardTitle className="text-2xl font-bold tracking-tight text-center text-foreground">
+            Welcome Back
+          </CardTitle>
+          <CardDescription className="text-center text-base">
+            Securely access your digital keys
           </CardDescription>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form onSubmit={handleSubmit} className="space-y-5">
             {error && (
-              <Alert variant="destructive">
+              <Alert variant="destructive" className="animate-in slide-in-from-top-2">
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
 
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <div className="relative">
-                <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Label htmlFor="email" className="text-sm font-medium ml-1">Email</Label>
+              <div className="relative group">
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   id="email"
                   type="email"
-                  placeholder="you@example.com"
+                  placeholder="name@example.com"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
                   required
-                  className="pl-10"
+                  className="pl-10 h-11"
                   disabled={loading}
                 />
               </div>
             </div>
 
             <div className="space-y-2">
-              <Label htmlFor="password">Master Password</Label>
-              <div className="relative">
-                <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <div className="flex items-center justify-between ml-1">
+                <Label htmlFor="password" className="text-sm font-medium">Master Password</Label>
+              </div>
+              <div className="relative group">
+                <Lock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground group-focus-within:text-primary transition-colors" />
                 <Input
                   id="password"
                   type="password"
@@ -95,25 +99,25 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   required
-                  className="pl-10"
+                  className="pl-10 h-11"
                   disabled={loading}
                 />
               </div>
             </div>
 
-            <Button type="submit" className="w-full" disabled={loading}>
-              {loading ? "Signing in..." : "Sign In"}
+            <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading}>
+              {loading ? "Decrypting..." : "Unlock Vault"}
             </Button>
           </form>
         </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
+        <CardFooter className="flex flex-col pt-0 pb-6">
           <div className="text-sm text-muted-foreground text-center">
-            Don't have an account?{" "}
+            New to zCloudPass?{" "}
             <Link
               to="/register"
-              className="text-primary hover:underline font-medium"
+              className="text-primary hover:text-primary/80 transition-colors font-semibold"
             >
-              Create one
+              Generate an account
             </Link>
           </div>
         </CardFooter>

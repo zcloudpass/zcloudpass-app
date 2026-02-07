@@ -12,13 +12,15 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Alert, AlertDescription } from "./ui/alert";
-import { ArrowLeft, Lock, AlertCircle, CheckCircle2 } from "lucide-react";
+import { ArrowLeft, Lock, AlertCircle, CheckCircle2, Sun, Moon } from "lucide-react";
 
 interface SettingsProps {
   onLogout: () => void;
+  theme: "light" | "dark";
+  toggleTheme: () => void;
 }
 
-export default function Settings({ onLogout }: SettingsProps) {
+export default function Settings({ onLogout, theme, toggleTheme }: SettingsProps) {
   const [currentPassword, setCurrentPassword] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -71,38 +73,42 @@ export default function Settings({ onLogout }: SettingsProps) {
 
   return (
     <div className="min-h-screen p-4 md:p-8">
-      <div className="max-w-2xl mx-auto space-y-6">
+      <div className="max-w-2xl mx-auto space-y-8">
         {/* Header */}
-        <div className="flex items-center gap-4">
+        <div className="flex items-center gap-6">
           <Button
             variant="ghost"
             size="icon"
             onClick={() => navigate("/vault")}
+            className="w-11 h-11 rounded-2xl border hover:bg-muted"
           >
-            <ArrowLeft className="w-4 h-4" />
+            <ArrowLeft className="w-5 h-5" />
           </Button>
           <div>
-            <h1 className="text-2xl font-bold">Settings</h1>
-            <p className="text-sm text-muted-foreground">
-              Manage your account settings
+            <h1 className="text-3xl font-bold tracking-tight text-foreground">
+              Settings
+            </h1>
+            <p className="text-muted-foreground flex items-center gap-2">
+              Manage your master vault security
             </p>
           </div>
         </div>
 
         {/* Change Password Card */}
-        <Card className="animate-slide-in">
-          <CardHeader>
-            <CardTitle className="flex items-center gap-2">
-              <Lock className="w-5 h-5" />
-              Change Master Password
-            </CardTitle>
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-4">
+            <div className="flex items-center gap-3 mb-1">
+              <div className="p-2 bg-primary/10 rounded-xl">
+                <Lock className="w-5 h-5 text-primary" />
+              </div>
+              <CardTitle className="text-xl">Authentication</CardTitle>
+            </div>
             <CardDescription>
-              Update your master password. You'll need to log in again after
-              changing it.
+              Update your master password to enhance vault security
             </CardDescription>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleChangePassword} className="space-y-4">
+            <form onSubmit={handleChangePassword} className="space-y-5">
               {error && (
                 <Alert variant="destructive">
                   <AlertCircle className="h-4 w-4" />
@@ -111,14 +117,14 @@ export default function Settings({ onLogout }: SettingsProps) {
               )}
 
               {success && (
-                <Alert className="border-green-500 text-green-700 dark:text-green-400">
+                <Alert className="bg-green-500/10 border-green-500/20 text-green-600 dark:text-green-400">
                   <CheckCircle2 className="h-4 w-4" />
                   <AlertDescription>{success}</AlertDescription>
                 </Alert>
               )}
 
               <div className="space-y-2">
-                <Label htmlFor="currentPassword">Current Password</Label>
+                <Label htmlFor="currentPassword">Current Master Password</Label>
                 <Input
                   id="currentPassword"
                   type="password"
@@ -127,11 +133,12 @@ export default function Settings({ onLogout }: SettingsProps) {
                   onChange={(e) => setCurrentPassword(e.target.value)}
                   required
                   disabled={loading}
+                  className="h-11"
                 />
               </div>
 
               <div className="space-y-2">
-                <Label htmlFor="newPassword">New Password</Label>
+                <Label htmlFor="newPassword">New Master Password</Label>
                 <Input
                   id="newPassword"
                   type="password"
@@ -140,9 +147,10 @@ export default function Settings({ onLogout }: SettingsProps) {
                   onChange={(e) => setNewPassword(e.target.value)}
                   required
                   disabled={loading}
+                  className="h-11"
                 />
-                <p className="text-xs text-muted-foreground">
-                  Minimum 8 characters. Use a strong, unique password.
+                <p className="text-[11px] text-muted-foreground ml-1">
+                  Use at least 12 characters with symbols for maximum safety.
                 </p>
               </div>
 
@@ -156,40 +164,47 @@ export default function Settings({ onLogout }: SettingsProps) {
                   onChange={(e) => setConfirmPassword(e.target.value)}
                   required
                   disabled={loading}
+                  className="h-11"
                 />
               </div>
 
-              <Alert>
-                <AlertCircle className="h-4 w-4" />
-                <AlertDescription className="text-xs">
-                  <strong>Warning:</strong> Changing your master password will
-                  require you to re-encrypt your vault. Make sure you remember
-                  your new password!
-                </AlertDescription>
-              </Alert>
+              <div className="p-4 rounded-xl bg-muted border flex gap-3">
+                <AlertCircle className="h-5 w-5 text-muted-foreground shrink-0" />
+                <p className="text-xs leading-relaxed text-foreground font-medium">
+                  <strong>Warning:</strong> Your new master password will be used to re-encrypt everything. If forgotten, no one can recover your data.
+                </p>
+              </div>
 
-              <Button type="submit" className="w-full" disabled={loading}>
-                {loading ? "Changing Password..." : "Change Password"}
+              <Button type="submit" className="w-full h-11 text-base font-semibold" disabled={loading}>
+                {loading ? "Processing..." : "Update Security Keys"}
               </Button>
             </form>
           </CardContent>
         </Card>
 
         {/* Account Info */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Account Information</CardTitle>
-            <CardDescription>Your account details</CardDescription>
+        <Card className="border shadow-sm">
+          <CardHeader className="pb-2">
+            <CardTitle className="text-xl">Account Session</CardTitle>
+            <CardDescription>Manage your current access</CardDescription>
           </CardHeader>
-          <CardContent className="space-y-4">
-            <div className="flex justify-between items-center py-2 border-b">
-              <span className="text-sm font-medium">Status</span>
-              <span className="text-sm text-muted-foreground">Active</span>
+          <CardContent className="space-y-2 pt-2">
+            <div className="flex justify-between items-center py-3 border-b">
+              <span className="text-sm font-medium">Encryption Status</span>
+              <span className="text-xs font-bold px-2 py-1 bg-primary text-primary-foreground rounded-lg">Active (AES-GCM)</span>
             </div>
-            <div className="flex justify-between items-center py-2">
-              <span className="text-sm font-medium">Session</span>
-              <Button variant="outline" size="sm" onClick={onLogout}>
-                Log Out
+            <div className="flex justify-between items-center py-3">
+              <div className="space-y-0.5">
+                <span className="text-sm font-medium block">Active Session</span>
+                <span className="text-xs text-muted-foreground block">Expires on browser close</span>
+              </div>
+              <Button
+                variant="outline"
+                size="sm"
+                onClick={onLogout}
+                className="rounded-xl border-destructive/20 text-destructive hover:bg-destructive hover:text-white transition-all"
+              >
+                Terminate Session
               </Button>
             </div>
           </CardContent>

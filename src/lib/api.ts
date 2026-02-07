@@ -1,4 +1,4 @@
-// API client for ZCloudPass backend
+// API client for zCloudPass backend
 // Update this URL to match your backend server
 const API_BASE_URL = "http://localhost:3000/api/v1";
 
