@@ -1,4 +1,5 @@
 import { Link } from "react-router-dom";
+import DecryptedText from "./DecryptedText";
 import {
   Lock,
   ArrowRight,
@@ -110,10 +111,28 @@ export default function Landing({ theme, toggleTheme }: LandingProps) {
             className="text-3xl sm:text-4xl md:text-5xl lg:text-7xl font-bold tracking-tighter text-foreground leading-tight animate-fade-up"
             style={{ animationDelay: "80ms" }}
           >
-            Your Digital Keys,
+            <DecryptedText
+              text="Your Digital Keys,"
+              animateOn="view"
+              revealDirection="start"
+              sequential={true}
+              speed={50}
+              maxIterations={15}
+              className="text-inherit"
+              parentClassName="inline-block"
+            />
             <br />
             <span className="underline decoration-primary decoration-4 underline-offset-8">
-              Perfectly Secured
+              <DecryptedText
+                text="Perfectly Secured"
+                animateOn="view"
+                revealDirection="start"
+                sequential={true}
+                speed={50}
+                maxIterations={15}
+                className="text-inherit"
+                parentClassName="inline-block"
+              />
             </span>
             .
           </h1>
