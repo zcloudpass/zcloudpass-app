@@ -24,23 +24,25 @@ export default function Landing({ theme, toggleTheme }: LandingProps) {
 
   return (
     <div className="flex flex-col min-h-screen relative overflow-hidden">
-      <GridScan
-        sensitivity={0.6}
-        lineThickness={2}
-        linesColor="#121212"
-        scanColor="#f60440"
-        scanOpacity={0.4}
-        gridScale={0.1}
-        lineStyle="solid"
-        lineJitter={0.1}
-        scanDirection="pingpong"
-        noiseIntensity={0.01}
-        scanGlow={0.7}
-        scanSoftness={2.5}
-        scanDuration={2}
-        scanDelay={2}
-        scanOnClick
-      />
+      <div className="">
+        <GridScan
+          sensitivity={0.6}
+          lineThickness={0}
+          linesColor="#0000"
+          scanColor="#f60440"
+          scanOpacity={0.5}
+          gridScale={0}
+          lineStyle="solid"
+          lineJitter={0.1}
+          scanDirection="pingpong"
+          noiseIntensity={0.01}
+          scanGlow={0.8}
+          scanSoftness={0.8}
+          scanDuration={2}
+          scanDelay={2}
+          scanOnClick
+        />
+      </div>
       <nav className="flex items-center justify-between px-4 md:px-6 lg:px-12 py-4 border-b relative">
         <div className="flex items-center gap-2">
           <div className="w-8 h-8 rounded flex items-center justify-center overflow-hidden">
