@@ -24,6 +24,11 @@ jobs:
       - name: Build web assets
         run: npm run build --if-present
 
+      - name: Install system dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y pkg-config libglib2.0-dev
+
       - name: Install Rust toolchain
         uses: actions-rs/toolchain@v1
         with:
