@@ -1,8 +1,9 @@
 import { describe, it, expect, beforeEach, afterEach, vi } from 'vitest';
 import { api } from '../../src/lib/api';
 
-// Mock fetch globally
-global.fetch = vi.fn();
+// Mock fetch globally using vi.stubGlobal to preserve jsdom's other globals
+const fetchMock = vi.fn();
+vi.stubGlobal('fetch', fetchMock);
 
 describe('API Client', () => {
   beforeEach(() => {
@@ -24,7 +25,7 @@ describe('API Client', () => {
         json: async () => ({ id: 1, email: 'test@example.com' }),
         headers: new Headers({ 'content-type': 'application/json' }),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       const result = await api.register({
         email: 'test@example.com',
@@ -47,7 +48,7 @@ describe('API Client', () => {
         status: 409,
         text: async () => 'Email already exists',
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await expect(
         api.register({
@@ -63,7 +64,7 @@ describe('API Client', () => {
         json: async () => ({ id: 2, email: 'user@example.com' }),
         headers: new Headers({ 'content-type': 'application/json' }),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await api.register({
         username: 'testuser',
@@ -72,7 +73,7 @@ describe('API Client', () => {
         encrypted_vault: 'encrypted-data-here',
       });
 
-      const callArgs = (global.fetch as any).mock.calls[0][1];
+      const callArgs = (fetchMock as any).mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
       
       expect(body.username).toBe('testuser');
@@ -90,7 +91,7 @@ describe('API Client', () => {
         }),
         headers: new Headers({ 'content-type': 'application/json' }),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       const result = await api.login({
         email: 'test@example.com',
@@ -107,7 +108,7 @@ describe('API Client', () => {
         status: 401,
         text: async () => 'Invalid credentials',
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await expect(
         api.login({
@@ -126,7 +127,7 @@ describe('API Client', () => {
         }),
         headers: new Headers({ 'content-type': 'application/json' }),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await api.login({
         email: 'test@example.com',
@@ -151,7 +152,7 @@ describe('API Client', () => {
         json: async () => ({ encrypted_vault: 'encrypted-data' }),
         headers: new Headers({ 'content-type': 'application/json' }),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       const result = await api.getVault();
 
@@ -178,7 +179,7 @@ describe('API Client', () => {
         status: 401,
         text: async () => 'Unauthorized',
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await expect(api.getVault()).rejects.toThrow('Session expired');
       expect(localStorage.getItem('session_token')).toBeNull();
@@ -193,7 +194,7 @@ describe('API Client', () => {
         text: async () => '',
         headers: new Headers(),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await api.updateVault({
         encrypted_vault: 'new-encrypted-data',
@@ -223,7 +224,7 @@ describe('API Client', () => {
         status: 500,
         text: async () => 'Server error',
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await expect(
         api.updateVault({ encrypted_vault: 'data' })
@@ -239,7 +240,7 @@ describe('API Client', () => {
         text: async () => '',
         headers: new Headers(),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await api.changePassword({
         current_password: 'OldPass123',
@@ -264,14 +265,14 @@ describe('API Client', () => {
         text: async () => '',
         headers: new Headers(),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await api.changePassword({
         current_password: 'CurrentPass',
         new_password: 'NewPassword',
       });
 
-      const callArgs = (global.fetch as any).mock.calls[0][1];
+      const callArgs = (fetchMock as any).mock.calls[0][1];
       const body = JSON.parse(callArgs.body);
       
       expect(body.current_password).toBe('CurrentPass');
@@ -294,7 +295,7 @@ describe('API Client', () => {
         ok: true,
         text: async () => 'OK',
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       const result = await api.checkHealth();
 
@@ -309,11 +310,11 @@ describe('API Client', () => {
         ok: true,
         text: async () => 'Health OK',
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       await api.checkHealth();
 
-      const callArgs = (global.fetch as any).mock.calls[0];
+      const callArgs = (fetchMock as any).mock.calls[0];
       // checkHealth doesn't pass a second argument (options)
       expect(callArgs[0]).toContain('/auth/health');
     });
@@ -370,7 +371,7 @@ describe('API Client', () => {
         text: async () => 'Plain text response',
         headers: new Headers({ 'content-type': 'text/plain' }),
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       const result = await api.getVault();
       
@@ -379,7 +380,7 @@ describe('API Client', () => {
 
     it('should handle network errors', async () => {
       localStorage.setItem('session_token', 'valid-token');
-      (global.fetch as any).mockRejectedValueOnce(new Error('Network error'));
+      (fetchMock as any).mockRejectedValueOnce(new Error('Network error'));
 
       await expect(api.getVault()).rejects.toThrow('Network error');
     });
@@ -391,7 +392,7 @@ describe('API Client', () => {
         status: 500,
         text: async () => 'Server error',
       };
-      (global.fetch as any).mockResolvedValueOnce(mockResponse);
+      (fetchMock as any).mockResolvedValueOnce(mockResponse);
 
       try {
         await api.getVault();

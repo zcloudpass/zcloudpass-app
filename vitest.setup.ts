@@ -1,3 +1,5 @@
+import '@testing-library/jest-dom';
+
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
   constructor(callback: ResizeObserverCallback) {}
