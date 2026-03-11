@@ -26,10 +26,14 @@ jobs:
       - name: Build web assets
         run: npm run build --if-present
 
-      - name: Install system dependencies (skip missing packages)
+      - name: Install system dependencies (enable universe and skip missing packages)
         run: |
           sudo apt-get update
           set -euo pipefail
+          # Ensure `add-apt-repository` is available and enable the 'universe' repo
+          sudo apt-get install -y --no-install-recommends software-properties-common || true
+          sudo add-apt-repository -y universe || true
+          sudo apt-get update || true
           PACKAGES=(
             pkg-config
             libglib2.0-dev
@@ -54,6 +58,38 @@ jobs:
           else
             echo "pkg-config: gdk-3.0 NOT found"
             echo "Available pkg-config search paths:" && pkg-config --variable pc_path pkg-config || true
+          fi
+
+          # Try to locate / install JavaScriptCore/WebKit GTK dev packages required by
+          # `javascriptcore-rs-sys`. Attempt several candidate package names and
+          # print apt search results to aid debugging if none are available.
+          echo "Searching for javascriptcoregtk packages in apt cache..."
+          apt-cache search javascriptcoregtk || true
+          CANDIDATES=(
+            libjavascriptcoregtk-4.1-dev
+            libjavascriptcoregtk-4.1-0-dev
+            libjavascriptcoregtk-4.0-dev
+            libwebkit2gtk-4.0-dev
+            libwebkit2gtk-4.1-dev
+          )
+
+          for cand in "${CANDIDATES[@]}"; do
+            if apt-cache show "$cand" >/dev/null 2>&1; then
+              echo "Installing candidate $cand"
+              sudo apt-get install -y --no-install-recommends "$cand" || true
+            else
+              echo "Candidate $cand not available"
+            fi
+          done
+
+          # Check for javascriptcoregtk pkg-config entry
+          if pkg-config --exists javascriptcoregtk-4.1; then
+            echo "pkg-config: javascriptcoregtk-4.1 found -> $(pkg-config --modversion javascriptcoregtk-4.1)"
+          elif pkg-config --exists javascriptcoregtk-4.0; then
+            echo "pkg-config: javascriptcoregtk-4.0 found -> $(pkg-config --modversion javascriptcoregtk-4.0)"
+          else
+            echo "pkg-config: javascriptcoregtk-* NOT found"
+            echo "Listing /usr/lib pkgconfig files:" && ls -1 /usr/lib/*pkgconfig* || true
           fi
 
       - name: Install Rust toolchain
