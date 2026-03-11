@@ -1,12 +1,12 @@
-import { describe, it, expect, vi, beforeEach, afterEach } from 'vitest';
-import { render, screen, waitFor } from '@testing-library/react';
-import userEvent from '@testing-library/user-event';
-import { MemoryRouter } from 'react-router-dom';
-import Settings from '../../src/components/Settings';
-import { api } from '../../src/lib/api';
+import { describe, it, expect, vi, beforeEach, afterEach } from "vitest";
+import { render, screen, waitFor } from "@testing-library/react";
+import userEvent from "@testing-library/user-event";
+import { MemoryRouter } from "react-router-dom";
+import Settings from "../../src/components/Settings";
+import { api } from "../../src/lib/api";
 
 // Mock the API module
-vi.mock('../../src/lib/api', () => ({
+vi.mock("../../src/lib/api", () => ({
   api: {
     changePassword: vi.fn(),
     logout: vi.fn(),
@@ -14,7 +14,7 @@ vi.mock('../../src/lib/api', () => ({
   },
 }));
 
-describe('Settings Flow Integration', () => {
+describe("Settings Flow Integration", () => {
   const mockOnLogout = vi.fn();
   const mockToggleTheme = vi.fn();
 
@@ -28,8 +28,8 @@ describe('Settings Flow Integration', () => {
     vi.useRealTimers();
   });
 
-  describe('Change Password Flow', () => {
-    it('should complete full password change: fill form → submit → success → auto-logout', async () => {
+  describe("Change Password Flow", () => {
+    it("should complete full password change: fill form → submit → success → auto-logout", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
       (api.changePassword as any).mockResolvedValueOnce({});
@@ -41,45 +41,43 @@ describe('Settings Flow Integration', () => {
             theme="dark"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       // Fill current password
       await user.type(
-        screen.getByLabelText('Current Master Password'),
-        'OldPassword123!'
+        screen.getByLabelText("Current Master Password"),
+        "OldPassword123!",
       );
 
       // Fill new password
       await user.type(
-        screen.getByLabelText('New Master Password'),
-        'NewSecurePass456!'
+        screen.getByLabelText("New Master Password"),
+        "NewSecurePass456!",
       );
 
       // Fill confirm password
       await user.type(
-        screen.getByLabelText('Confirm New Password'),
-        'NewSecurePass456!'
+        screen.getByLabelText("Confirm New Password"),
+        "NewSecurePass456!",
       );
 
       // Submit
       await user.click(
-        screen.getByRole('button', { name: /update security keys/i })
+        screen.getByRole("button", { name: /update security keys/i }),
       );
 
       // Verify API called with correct data
       await waitFor(() => {
         expect(api.changePassword).toHaveBeenCalledWith({
-          current_password: 'OldPassword123!',
-          new_password: 'NewSecurePass456!',
+          current_password: "OldPassword123!",
+          new_password: "NewSecurePass456!",
         });
       });
 
       // Success message should appear
       await waitFor(() => {
-        expect(
-          screen.getByText(/password changed successfully/i)
-        ).toBeTruthy();
+        expect(screen.getByText(/password changed successfully/i)).toBeTruthy();
       });
 
       // After 2 seconds, should auto-logout
@@ -90,7 +88,7 @@ describe('Settings Flow Integration', () => {
       });
     });
 
-    it('should show error when new passwords do not match', async () => {
+    it("should show error when new passwords do not match", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
       render(
@@ -100,35 +98,35 @@ describe('Settings Flow Integration', () => {
             theme="dark"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       await user.type(
-        screen.getByLabelText('Current Master Password'),
-        'CurrentPass'
+        screen.getByLabelText("Current Master Password"),
+        "CurrentPass",
       );
       await user.type(
-        screen.getByLabelText('New Master Password'),
-        'NewPassword1!'
+        screen.getByLabelText("New Master Password"),
+        "NewPassword1!",
       );
       await user.type(
-        screen.getByLabelText('Confirm New Password'),
-        'DifferentPassword!'
+        screen.getByLabelText("Confirm New Password"),
+        "DifferentPassword!",
       );
 
       await user.click(
-        screen.getByRole('button', { name: /update security keys/i })
+        screen.getByRole("button", { name: /update security keys/i }),
       );
 
       await waitFor(() => {
-        expect(screen.getByText('New passwords do not match')).toBeTruthy();
+        expect(screen.getByText("New passwords do not match")).toBeTruthy();
       });
 
       // API should NOT be called
       expect(api.changePassword).not.toHaveBeenCalled();
     });
 
-    it('should show error when new password is too short', async () => {
+    it("should show error when new password is too short", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
       render(
@@ -138,40 +136,34 @@ describe('Settings Flow Integration', () => {
             theme="dark"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       await user.type(
-        screen.getByLabelText('Current Master Password'),
-        'CurrentPass'
+        screen.getByLabelText("Current Master Password"),
+        "CurrentPass",
       );
-      await user.type(
-        screen.getByLabelText('New Master Password'),
-        'short'
-      );
-      await user.type(
-        screen.getByLabelText('Confirm New Password'),
-        'short'
-      );
+      await user.type(screen.getByLabelText("New Master Password"), "short");
+      await user.type(screen.getByLabelText("Confirm New Password"), "short");
 
       await user.click(
-        screen.getByRole('button', { name: /update security keys/i })
+        screen.getByRole("button", { name: /update security keys/i }),
       );
 
       await waitFor(() => {
         expect(
-          screen.getByText('New password must be at least 8 characters long')
+          screen.getByText("New password must be at least 8 characters long"),
         ).toBeTruthy();
       });
 
       expect(api.changePassword).not.toHaveBeenCalled();
     });
 
-    it('should display API error when password change fails', async () => {
+    it("should display API error when password change fails", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
       (api.changePassword as any).mockRejectedValueOnce(
-        new Error('Current password is incorrect')
+        new Error("Current password is incorrect"),
       );
 
       render(
@@ -181,37 +173,35 @@ describe('Settings Flow Integration', () => {
             theme="dark"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       await user.type(
-        screen.getByLabelText('Current Master Password'),
-        'WrongPassword'
+        screen.getByLabelText("Current Master Password"),
+        "WrongPassword",
       );
       await user.type(
-        screen.getByLabelText('New Master Password'),
-        'NewValidPass123!'
+        screen.getByLabelText("New Master Password"),
+        "NewValidPass123!",
       );
       await user.type(
-        screen.getByLabelText('Confirm New Password'),
-        'NewValidPass123!'
+        screen.getByLabelText("Confirm New Password"),
+        "NewValidPass123!",
       );
 
       await user.click(
-        screen.getByRole('button', { name: /update security keys/i })
+        screen.getByRole("button", { name: /update security keys/i }),
       );
 
       await waitFor(() => {
-        expect(
-          screen.getByText('Current password is incorrect')
-        ).toBeTruthy();
+        expect(screen.getByText("Current password is incorrect")).toBeTruthy();
       });
 
       // Should NOT auto-logout on error
       expect(mockOnLogout).not.toHaveBeenCalled();
     });
 
-    it('should show loading state during password change', async () => {
+    it("should show loading state during password change", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
       let resolveChange: (value: any) => void;
@@ -227,44 +217,42 @@ describe('Settings Flow Integration', () => {
             theme="dark"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
       await user.type(
-        screen.getByLabelText('Current Master Password'),
-        'CurrentPass'
+        screen.getByLabelText("Current Master Password"),
+        "CurrentPass",
       );
       await user.type(
-        screen.getByLabelText('New Master Password'),
-        'NewPassword123!'
+        screen.getByLabelText("New Master Password"),
+        "NewPassword123!",
       );
       await user.type(
-        screen.getByLabelText('Confirm New Password'),
-        'NewPassword123!'
+        screen.getByLabelText("Confirm New Password"),
+        "NewPassword123!",
       );
 
       await user.click(
-        screen.getByRole('button', { name: /update security keys/i })
+        screen.getByRole("button", { name: /update security keys/i }),
       );
 
       // Should show processing state
       await waitFor(() => {
-        expect(screen.getByText('Processing...')).toBeTruthy();
+        expect(screen.getByText("Processing...")).toBeTruthy();
       });
 
       // Resolve the promise
       resolveChange!({});
 
       await waitFor(() => {
-        expect(
-          screen.getByText(/password changed successfully/i)
-        ).toBeTruthy();
+        expect(screen.getByText(/password changed successfully/i)).toBeTruthy();
       });
     });
   });
 
-  describe('Settings UI Integration', () => {
-    it('should display security info section', () => {
+  describe("Settings UI Integration", () => {
+    it("should display security info section", () => {
       render(
         <MemoryRouter>
           <Settings
@@ -272,16 +260,16 @@ describe('Settings Flow Integration', () => {
             theme="dark"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
-      expect(screen.getByText('Settings')).toBeTruthy();
-      expect(screen.getByText('Authentication')).toBeTruthy();
-      expect(screen.getByText('Active (AES-GCM)')).toBeTruthy();
-      expect(screen.getByText('Account Session')).toBeTruthy();
+      expect(screen.getByText("Settings")).toBeTruthy();
+      expect(screen.getByText("Authentication")).toBeTruthy();
+      expect(screen.getByText("Active (AES-GCM)")).toBeTruthy();
+      expect(screen.getByText("Account Session")).toBeTruthy();
     });
 
-    it('should trigger logout when terminate session button is clicked', async () => {
+    it("should trigger logout when terminate session button is clicked", async () => {
       const user = userEvent.setup({ advanceTimers: vi.advanceTimersByTime });
 
       render(
@@ -291,10 +279,10 @@ describe('Settings Flow Integration', () => {
             theme="dark"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
 
-      const terminateButton = screen.getByRole('button', {
+      const terminateButton = screen.getByRole("button", {
         name: /terminate session/i,
       });
       await user.click(terminateButton);
@@ -302,7 +290,7 @@ describe('Settings Flow Integration', () => {
       expect(mockOnLogout).toHaveBeenCalledOnce();
     });
 
-    it('should render with both theme variants', () => {
+    it("should render with both theme variants", () => {
       const { unmount } = render(
         <MemoryRouter>
           <Settings
@@ -310,9 +298,9 @@ describe('Settings Flow Integration', () => {
             theme="light"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
-      expect(screen.getByText('Settings')).toBeTruthy();
+      expect(screen.getByText("Settings")).toBeTruthy();
       unmount();
 
       render(
@@ -322,9 +310,9 @@ describe('Settings Flow Integration', () => {
             theme="dark"
             toggleTheme={mockToggleTheme}
           />
-        </MemoryRouter>
+        </MemoryRouter>,
       );
-      expect(screen.getByText('Settings')).toBeTruthy();
+      expect(screen.getByText("Settings")).toBeTruthy();
     });
   });
 });
