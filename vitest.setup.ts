@@ -1,4 +1,5 @@
 import "@testing-library/jest-dom";
+import { vi } from "vitest";
 
 // Mock ResizeObserver
 global.ResizeObserver = class ResizeObserver {
@@ -44,7 +45,6 @@ if (typeof (globalThis as any).localStorage?.clear !== "function") {
   // CommonJS `cookie` package which can cause ESM resolution errors in the
   // Vitest environment. Provide a lightweight mock with `parse` and `serialize`
   // to ensure tests that transitively import `cookie` work correctly.
-  import { vi } from "vitest";
 
   vi.mock("cookie", () => ({
     parse: (cookieHeader: string) => {
