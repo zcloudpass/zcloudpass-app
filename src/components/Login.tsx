@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { api } from "../lib/api";
 import { Button } from "./ui/button";
@@ -13,7 +13,7 @@ import {
   CardTitle,
 } from "./ui/card";
 import { Alert, AlertDescription } from "./ui/alert";
-import { Lock, Mail, AlertCircle } from "lucide-react";
+import { Lock, Mail, AlertCircle, Fingerprint } from "lucide-react";
 
 interface LoginProps {
   onLoginSuccess: () => void;
@@ -24,6 +24,37 @@ export default function Login({ onLoginSuccess }: LoginProps) {
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
+
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const available = await api.isBiometricAvailable();
+      setBiometricAvailable(available);
+    };
+    checkBiometric();
+  }, []);
+
+  const handleBiometricAuth = async () => {
+    setBiometricLoading(true);
+    setError("");
+
+    try {
+      const authenticated = await api.authenticateWithBiometric();
+      if (authenticated) {
+        // If biometric succeeds, we still need email/password for server auth
+        // But we can show a hint to remember credentials
+        setError("Biometric recognized. Please enter your credentials to complete login.");
+      } else {
+        setError("Biometric authentication failed");
+      }
+    } catch (err) {
+      console.error("Biometric auth error:", err);
+      setError(err instanceof Error ? err.message : "Biometric authentication failed");
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -67,6 +98,30 @@ export default function Login({ onLoginSuccess }: LoginProps) {
                 <AlertCircle className="h-4 w-4" />
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
+            )}
+
+            {biometricAvailable && (
+              <Button
+                type="button"
+                variant="outline"
+                className="w-full h-11 text-base font-semibold flex items-center justify-center gap-2"
+                onClick={handleBiometricAuth}
+                disabled={biometricLoading || loading}
+              >
+                <Fingerprint className="w-5 h-5" />
+                {biometricLoading ? "Scanning..." : "Unlock with Biometric"}
+              </Button>
+            )}
+
+            {biometricAvailable && (
+              <div className="relative">
+                <div className="absolute inset-0 flex items-center">
+                  <span className="w-full border-t border-border" />
+                </div>
+                <div className="relative flex justify-center text-xs uppercase">
+                  <span className="bg-card px-2 text-muted-foreground">Or</span>
+                </div>
+              </div>
             )}
 
             <div className="space-y-2">

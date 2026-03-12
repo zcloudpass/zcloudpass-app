@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { api } from "../lib/api";
 import { Button } from "./ui/button";
 import { Label } from "./ui/label";
 import { Input } from "./ui/input";
@@ -145,8 +146,12 @@ export default function PasswordGenerator({
     setCopied(false);
   };
 
-  const handleCopy = () => {
-    navigator.clipboard.writeText(password);
+  const handleCopy = async () => {
+    try {
+      await api.copyToClipboard(password, 10);
+    } catch {
+      navigator.clipboard.writeText(password);
+    }
     setCopied(true);
     setTimeout(() => setCopied(false), 2000);
   };
