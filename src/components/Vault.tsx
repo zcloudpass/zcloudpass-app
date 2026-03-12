@@ -43,6 +43,7 @@ import {
   ArrowLeft,
   LucideDice3,
   Pencil,
+  Fingerprint,
 } from "lucide-react";
 import PasswordGenerator from "./Passwordgenerator";
 
@@ -106,6 +107,8 @@ export default function Vault({ onLogout, theme, toggleTheme }: VaultProps) {
     {},
   );
   const [showMobileDetail, setShowMobileDetail] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
   const navigate = useNavigate();
 
   const [entryForm, setEntryForm] = useState({
@@ -143,6 +146,51 @@ export default function Vault({ onLogout, theme, toggleTheme }: VaultProps) {
     loadVault();
   }, []);
 
+  // Check biometric availability and whether we have a stored password
+  useEffect(() => {
+    const checkBiometric = async () => {
+      const hasSavedPw = !!sessionStorage.getItem("_bp");
+      if (hasSavedPw) {
+        const available = await api.isBiometricAvailable();
+        setBiometricAvailable(available);
+      }
+    };
+    checkBiometric();
+  }, [unlocked]);
+
+  const handleBiometricUnlock = async () => {
+    setBiometricLoading(true);
+    setError("");
+    try {
+      const authenticated = await api.authenticateWithBiometric();
+      if (!authenticated) {
+        setError("Biometric authentication failed");
+        return;
+      }
+      const savedPw = sessionStorage.getItem("_bp");
+      if (!savedPw) {
+        setError("No saved credentials. Please unlock with your master password first.");
+        return;
+      }
+      const pw = atob(savedPw);
+      setMasterPassword(pw);
+
+      const response = await api.getVault();
+      if (!response.encrypted_vault) {
+        setError("No vault found");
+        return;
+      }
+      const decrypted = await decryptVault(response.encrypted_vault, pw);
+      setVault(decrypted);
+      setUnlocked(true);
+    } catch (err) {
+      console.error("Biometric unlock error:", err);
+      setError("Biometric unlock failed. Please use your master password.");
+    } finally {
+      setBiometricLoading(false);
+    }
+  };
+
   const handleUnlock = async () => {
     try {
       setError("");
@@ -159,6 +207,8 @@ export default function Vault({ onLogout, theme, toggleTheme }: VaultProps) {
       );
       setVault(decrypted);
       setUnlocked(true);
+      // Store password for biometric unlock in current session
+      sessionStorage.setItem("_bp", btoa(masterPassword));
     } catch (err) {
       console.error("Unlock error:", err);
       setError("Failed to unlock vault. Wrong password?");
@@ -270,8 +320,17 @@ export default function Vault({ onLogout, theme, toggleTheme }: VaultProps) {
     setShowMobileDetail(false);
   };
 
-  const handleCopy = (text: string) => {
-    navigator.clipboard.writeText(text);
+
+  const handleCopy = async (text: string) => {
+    try {
+      // Use Tauri's clipboard with auto-clear after 10 seconds
+      await api.copyToClipboard(text, 10);
+    } catch (err) {
+      // Fallback to regular clipboard if Tauri method fails
+      navigator.clipboard.writeText(text).catch(() => {
+        console.error("Failed to copy to clipboard");
+      });
+    }
   };
 
   const handleGeneratePassword = () => {
@@ -335,6 +394,30 @@ export default function Vault({ onLogout, theme, toggleTheme }: VaultProps) {
                 <AlertDescription>{error}</AlertDescription>
               </Alert>
             )}
+
+            {biometricAvailable && (
+              <>
+                <Button
+                  type="button"
+                  variant="outline"
+                  className="w-full h-11 text-base font-semibold flex items-center justify-center gap-2"
+                  onClick={handleBiometricUnlock}
+                  disabled={biometricLoading}
+                >
+                  <Fingerprint className="w-5 h-5" />
+                  {biometricLoading ? "Authenticating..." : "Unlock with Biometric"}
+                </Button>
+                <div className="relative">
+                  <div className="absolute inset-0 flex items-center">
+                    <span className="w-full border-t border-border" />
+                  </div>
+                  <div className="relative flex justify-center text-xs uppercase">
+                    <span className="bg-card px-2 text-muted-foreground">Or</span>
+                  </div>
+                </div>
+              </>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="masterPassword" title="masterPassword">
                 Master Password

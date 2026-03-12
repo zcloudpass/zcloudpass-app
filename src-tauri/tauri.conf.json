@@ -1,10 +1,10 @@
 {
   "$schema": "../node_modules/@tauri-apps/cli/config.schema.json",
-  "productName": "zcloudpass-app",
+  "productName": "zCloudPass",
   "version": "0.1.0",
-  "identifier": "com.tauri.dev",
+  "identifier": "com.zcloudpass.app",
   "build": {
-    "frontendDist": "../build",
+    "frontendDist": "../dist",
     "devUrl": "http://localhost:1420",
     "beforeDevCommand": "npm run dev",
     "beforeBuildCommand": "npm run build"
@@ -13,14 +13,18 @@
     "windows": [
       {
         "title": "zCloudPass",
-        "width": 800,
-        "height": 600,
+        "label": "main",
+        "width": 1000,
+        "height": 700,
+        "minWidth": 800,
+        "minHeight": 600,
         "resizable": true,
-        "fullscreen": false
+        "fullscreen": false,
+        "center": true
       }
     ],
     "security": {
-      "csp": null
+      "csp": "default-src 'self'; connect-src 'self' https://zcloudpass-backend.onrender.com; img-src 'self' https://www.google.com data:; style-src 'self' 'unsafe-inline'; script-src 'self'"
     }
   },
   "bundle": {
@@ -32,6 +36,13 @@
       "icons/128x128@2x.png",
       "icons/icon.icns",
       "icons/icon.ico"
-    ]
+    ],
+    "shortDescription": "Secure password manager",
+    "longDescription": "zCloudPass - A secure, encrypted cloud password manager with biometric unlock support."
+  },
+  "plugins": {
+    "biometric": {
+      "reason": "Unlock your vault securely with biometric authentication"
+    }
   }
 }

@@ -1,5 +1,9 @@
 // API client for zCloudPass backend
 // Uses VITE_API_BASE_URL env variable if set, otherwise defaults to production backend
+import { invoke } from "@tauri-apps/api/core";
+import { authenticate, checkStatus as biometricStatus } from "@tauri-apps/plugin-biometric";
+import { writeText, clear as clearClipboard } from "@tauri-apps/plugin-clipboard-manager";
+
 const API_BASE_URL =
   import.meta.env.VITE_API_BASE_URL ||
   "https://zcloudpass-backend.onrender.com/api/v1";
@@ -142,6 +146,49 @@ class ApiClient {
   async checkHealth(): Promise<string> {
     const response = await fetch(`${this.baseUrl}/auth/health`);
     return response.text();
+  }
+
+  // Biometric authentication methods
+  async isBiometricAvailable(): Promise<boolean> {
+    try {
+      const result = await biometricStatus();
+      return result.isAvailable;
+    } catch (err) {
+      console.error("Biometric availability check failed:", err);
+      return false;
+    }
+  }
+
+  async authenticateWithBiometric(): Promise<boolean> {
+    try {
+      await authenticate("Unlock your vault securely with biometric authentication", {
+        allowDeviceCredential: true,
+      });
+      return true;
+    } catch (err) {
+      console.error("Biometric authentication failed:", err);
+      return false;
+    }
+  }
+
+  async copyToClipboard(text: string, delaySecs: number = 10): Promise<void> {
+    try {
+      await invoke<void>("copy_and_clear", {
+        text,
+        delaySecs,
+      });
+    } catch (err) {
+      // Fallback: use plugin directly and set our own timer
+      console.warn("copy_and_clear command failed, using fallback:", err);
+      await writeText(text);
+      setTimeout(async () => {
+        try {
+          await clearClipboard();
+        } catch {
+          // Ignore clear failures
+        }
+      }, delaySecs * 1000);
+    }
   }
 
   isAuthenticated(): boolean {
